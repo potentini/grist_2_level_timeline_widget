@@ -342,14 +342,14 @@
   function buildLogicalRecords(records) {
     const result = [];
 
-    for (const raw of records) {
-      if (!raw) continue;
+    records.forEach((raw, sourceIndex) => {
+      if (!raw) return;
       const mapped = grist.mapColumnNames(raw, { mappings: latestMappings });
-      if (!mapped) continue;
+      if (!mapped) return;
 
       const selectorRaw = (mapped.selector || "").toString().trim().toUpperCase();
       if (selectorRaw && selectorRaw !== "O" && selectorRaw !== "1" && selectorRaw !== "TRUE") {
-        continue;
+        return;
       }
 
       const parentVal = (mapped.parent || "").toString().trim();
@@ -388,9 +388,10 @@
         respOp: mapped.respOp || "",
         respChild: mapped.respChild || "",
         selector: mapped.selector || "",
-        order
+        order,
+        sourceIndex
       });
-    }
+    });
 
     return result;
   }
@@ -412,7 +413,8 @@
             aggEnd: null,
             hasOnlyMilestones: false,
             onlySingleMilestone: false,
-            order: null
+            order: null,
+            sourceIndex: r.sourceIndex
           });
         }
         groupsMap.get(key).children.push(r);
@@ -454,7 +456,7 @@
         const ao = a.order != null ? a.order : Infinity;
         const bo = b.order != null ? b.order : Infinity;
         if (ao !== bo) return ao - bo;
-        return a.childLabel.localeCompare(b.childLabel, "fr");
+        return a.sourceIndex - b.sourceIndex;
       });
 
       parentGroups.push(g);
@@ -464,14 +466,14 @@
       const ao = a.order != null ? a.order : Infinity;
       const bo = b.order != null ? b.order : Infinity;
       if (ao !== bo) return ao - bo;
-      return a.parentLabel.localeCompare(b.parentLabel, "fr");
+      return a.sourceIndex - b.sourceIndex;
     });
 
     leafTasks.sort((a, b) => {
       const ao = a.order != null ? a.order : Infinity;
       const bo = b.order != null ? b.order : Infinity;
       if (ao !== bo) return ao - bo;
-      return a.childLabel.localeCompare(b.childLabel, "fr");
+      return a.sourceIndex - b.sourceIndex;
     });
   }
 

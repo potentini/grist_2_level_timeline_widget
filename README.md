@@ -10,6 +10,7 @@ L’interface permet de naviguer dans le temps, regrouper/plier les tâches, cha
 - Zoom temporel : `jour`, `semaine`, `mois`, `année`, `tout`.
 - Navigation temporelle : précédent / suivant / aujourd’hui.
 - Repli / dépli global et par parent.
+- Tri compatible avec le tri natif Grist (quand la colonne `order` n’est pas renseignée).
 - Coloration configurable selon différents champs (priorité, statut, responsable, etc.).
 - Infobulles riches au survol (dates, statut, priorité, responsables).
 - Édition des dates par glisser-déposer sur les barres.
