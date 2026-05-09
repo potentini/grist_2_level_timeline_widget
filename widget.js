@@ -80,7 +80,7 @@
   };
 
   let sideDragInfo = null;
-  const STORAGE_KEY = "grist_gantt_state_v11";
+  const STORAGE_KEY = "grist_gantt_state_v12";
 
   function loadState() {
     try {
@@ -356,6 +356,8 @@
       const childVal = (mapped.child || "").toString().trim();
       const startDate = normalizeDate(mapped.start);
       const endDate = normalizeDate(mapped.end);
+      const parentStartDate = normalizeDate(mapped.parentStart);
+      const parentEndDate = normalizeDate(mapped.parentEnd);
       const order = mapped.order != null && !isNaN(mapped.order) ? Number(mapped.order) : null;
 
       const hasParent = !!parentVal;
@@ -380,6 +382,8 @@
         childLabel,
         startDate,
         endDate,
+        parentStartDate,
+        parentEndDate,
         isMilestone,
         milestoneDate,
         priority: mapped.priority || "",
@@ -410,6 +414,8 @@
             children: [],
             aggStart: null,
             aggEnd: null,
+            explicitParentStart: null,
+            explicitParentEnd: null,
             hasOnlyMilestones: false,
             onlySingleMilestone: false,
             order: null
@@ -434,6 +440,13 @@
           if (minOrder == null || c.order < minOrder) minOrder = c.order;
         }
 
+        if (!g.explicitParentStart && c.parentStartDate) {
+          g.explicitParentStart = c.parentStartDate;
+        }
+        if (!g.explicitParentEnd && c.parentEndDate) {
+          g.explicitParentEnd = c.parentEndDate;
+        }
+
         const ds = c.startDate || c.milestoneDate || c.endDate;
         const de = c.endDate || c.milestoneDate || c.startDate;
 
@@ -441,8 +454,8 @@
         if (de && (!maxDate || de > maxDate)) maxDate = de;
       }
 
-      g.aggStart = minDate;
-      g.aggEnd = maxDate;
+      g.aggStart = g.explicitParentStart || minDate;
+      g.aggEnd = g.explicitParentEnd || maxDate;
       g.hasOnlyMilestones = allMilestones && g.children.length > 0;
       g.onlySingleMilestone =
         g.children.length === 1 &&
@@ -482,6 +495,8 @@
       const dates = [];
       if (r.startDate) dates.push(r.startDate);
       if (r.endDate) dates.push(r.endDate);
+      if (r.parentStartDate) dates.push(r.parentStartDate);
+      if (r.parentEndDate) dates.push(r.parentEndDate);
       if (r.milestoneDate) dates.push(r.milestoneDate);
       for (const d of dates) {
         if (!min || d < min) min = d;
@@ -1369,7 +1384,7 @@
       const label = document.createElement("span");
       label.className = "group-row-label";
       label.textContent = group.parentLabel;
-      label.style.left = (rightmostX + 20) + "px";
+      label.style.left = (rightmostX + 4) + "px";
       label.style.top = centerY + "px";
 
       timelineGridEl.appendChild(label);
@@ -1422,7 +1437,7 @@
       }
 
       const yOffset = getMilestoneLabelYOffset(trackIndex, x);
-      label.style.left = (x + 12) + "px";
+      label.style.left = (x + 18) + "px";
       label.style.top = (centerY + yOffset) + "px";
 
       const extras = extrasFromTask(task, isParent);
@@ -1474,7 +1489,7 @@
       const rightFrac = dateToFrac(e);
       if (leftFrac == null || rightFrac == null) return;
 
-      const widthFrac = Math.max(0.01, (rightFrac - leftFrac) + 1 / totalDays);
+      const widthFrac = Math.max(0.01, (rightFrac - leftFrac) + (1 / totalDays));
       const leftPx = leftFrac * containerWidth;
       const widthPx = widthFrac * containerWidth;
 
@@ -1874,6 +1889,8 @@
       { name: "child", title: "Élément enfant", optional: true },
       { name: "start", title: "Date de début", optional: true, type: "Date,DateTime" },
       { name: "end", title: "Date de fin", optional: true, type: "Date,DateTime" },
+      { name: "parentStart", title: "Date début parent", optional: true, type: "Date,DateTime" },
+      { name: "parentEnd", title: "Date fin parent", optional: true, type: "Date,DateTime" },
       { name: "priority", title: "Priorité", optional: true },
       { name: "status", title: "Statut", optional: true },
       { name: "respPol", title: "Référent politique", optional: true },
